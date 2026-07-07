@@ -13,6 +13,9 @@ export default class ItemPurchaseTool extends LightningElement {
     items = [];
     error;
 
+    selectedItemId;
+    selectedItem;
+
     typeOptions = [
         { label: 'All', value: '' },
         { label: 'Electronics', value: 'Electronics' },
@@ -29,32 +32,37 @@ export default class ItemPurchaseTool extends LightningElement {
         { label: 'Other', value: 'Other' }
     ];
 
+    connectedCallback() {
+        this.loadItems();
+    }
+
     @wire(CurrentPageReference)
     getStateParameters(currentPageReference) {
         if (currentPageReference) {
             this.accountId = currentPageReference.state?.c__accountId;
+            this.loadAccount();
         }
     }
 
-    @wire(getAccountInfo, { accountId: '$accountId' })
-    wiredAccount({ error, data }) {
-        if (data) {
-            this.account = data;
-        } else if (error) {
+    async loadAccount() {
+        try {
+            this.account = await getAccountInfo({
+                accountId: this.accountId
+            });
+        } catch (error) {
             this.error = error.body?.message || 'Failed to load account';
         }
     }
 
-    @wire(getItems, {
-        type: '$selectedType',
-        family: '$selectedFamily',
-        searchTerm: '$searchTerm'
-    })
-    wiredItems({ error, data }) {
-        if (data) {
-            this.items = data;
+    async loadItems() {
+        try {
+            this.items = await getItems({
+                type: this.selectedType,
+                family: this.selectedFamily,
+                searchTerm: this.searchTerm
+            });
             this.error = undefined;
-        } else if (error) {
+        } catch (error) {
             this.items = [];
             this.error = error.body?.message || 'Failed to load items';
         }
@@ -62,13 +70,30 @@ export default class ItemPurchaseTool extends LightningElement {
 
     handleSearchChange(event) {
         this.searchTerm = event.target.value;
+        this.loadItems();
     }
 
     handleTypeChange(event) {
         this.selectedType = event.detail.value;
+        this.loadItems();
     }
 
     handleFamilyChange(event) {
         this.selectedFamily = event.detail.value;
+        this.loadItems();
+    }
+
+    get isModalOpen() {
+        return this.selectedItemId !== undefined;
+    }
+
+    handleDetailsClick(event) {
+        this.selectedItemId = event.currentTarget.dataset.id;
+        this.selectedItem = this.items.find((item) => item.Id === this.selectedItemId);
+    }
+
+    closeModal() {
+        this.selectedItemId = undefined;
+        this.selectedItem = undefined;
     }
 }
