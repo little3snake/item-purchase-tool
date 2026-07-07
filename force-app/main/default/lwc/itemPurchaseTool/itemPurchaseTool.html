@@ -1,0 +1,57 @@
+<template>
+    <lightning-card title="Item Purchase Tool">
+        <div class="slds-p-around_medium">
+            <template if:true={account}>
+                <div class="slds-box slds-m-bottom_medium">
+                    <h2 class="slds-text-heading_medium">{account.Name}</h2>
+                    <p>Account Number: {account.AccountNumber}</p>
+                    <p>Industry: {account.Industry}</p>
+                </div>
+            </template>
+            <lightning-input
+                    label="Search"
+                    value={searchTerm}
+                    onchange={handleSearchChange}>
+            </lightning-input>
+
+            <div class="slds-m-top_medium">
+                <lightning-combobox
+                        label="Type"
+                        value={selectedType}
+                        options={typeOptions}
+                        onchange={handleTypeChange}>
+                </lightning-combobox>
+
+                <lightning-combobox
+                        label="Family"
+                        value={selectedFamily}
+                        options={familyOptions}
+                        onchange={handleFamilyChange}>
+                </lightning-combobox>
+            </div>
+
+            <template if:true={items}>
+                <p class="slds-m-top_medium">
+                    Items found: {items.length}
+                </p>
+
+                <template for:each={items} for:item="item">
+                    <div key={item.Id} class="slds-box slds-m-top_small">
+                        <h3 class="slds-text-heading_small">{item.Name}</h3>
+                        <p>{item.Description__c}</p>
+                        <p>Type: {item.Type__c}</p>
+                        <p>Family: {item.Family__c}</p>
+                        <p>Price: {item.Price__c}</p>
+                        <p>Available: {item.AvailableQuantity__c}</p>
+                    </div>
+                </template>
+            </template>
+
+            <template if:true={error}>
+                <p class="slds-text-color_error slds-m-top_medium">
+                    {error}
+                </p>
+            </template>
+        </div>
+    </lightning-card>
+</template>
