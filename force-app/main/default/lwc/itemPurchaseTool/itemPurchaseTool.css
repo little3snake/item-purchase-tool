@@ -1,0 +1,69 @@
+.top-panel {
+    min-height: 56px;
+}
+
+.account-info {
+    display: flex;
+    gap: 36px;
+    justify-content: center;
+    align-items: center;
+}
+
+.filters-box {
+    min-height: 100%;
+    height: 100%;
+}
+
+.search-box {
+    max-width: 100%;
+}
+
+.item-tile {
+    height: 260px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+}
+
+.item-image {
+    max-width: 130px;
+    max-height: 90px;
+    object-fit: contain;
+    display: block;
+}
+
+.item-tile {
+    height: 220px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+}
+
+.item-description {
+    width: 100%;
+    height: 38px;
+    margin: 0 0 8px 0;
+    overflow: hidden;
+    line-height: 19px;
+}
+
+.image-wrapper {
+    height: 70px;
+    width: 100%;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.button-row {
+    margin-top: 14px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+}

@@ -5,6 +5,8 @@ import getAccountInfo from '@salesforce/apex/ItemController.getAccountInfo';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import checkoutCart from '@salesforce/apex/ItemController.checkoutCart';
 import { NavigationMixin } from 'lightning/navigation';
+import isCurrentUserManager from '@salesforce/apex/ItemController.isCurrentUserManager';
+import searchImage from '@salesforce/apex/ItemController.searchImage';
 
 export default class ItemPurchaseTool extends NavigationMixin(LightningElement) {
     accountId;
@@ -21,6 +23,9 @@ export default class ItemPurchaseTool extends NavigationMixin(LightningElement) 
 
     cartItems = [];
     isCartModalOpen = false;
+
+    isManager = false;
+    isCreateItemModalOpen = false;
 
     typeOptions = [
         { label: 'All', value: '' },
@@ -40,6 +45,7 @@ export default class ItemPurchaseTool extends NavigationMixin(LightningElement) 
 
     connectedCallback() {
         this.loadItems();
+        this.loadCurrentUserPermissions();
     }
 
     @wire(CurrentPageReference)
@@ -204,6 +210,43 @@ export default class ItemPurchaseTool extends NavigationMixin(LightningElement) 
             console.log('Created purchase:', purchaseId);
         } catch (error) {
             this.showToast('Checkout failed', error.body?.message || 'Failed to check out cart.', 'error');
+        }
+    }
+
+    async loadCurrentUserPermissions() {
+        try {
+            this.isManager = await isCurrentUserManager();
+        } catch (error) {
+            this.isManager = false;
+        }
+    }
+
+    openCreateItemModal() {
+        this.isCreateItemModalOpen = true;
+    }
+
+    closeCreateItemModal() {
+        this.isCreateItemModalOpen = false;
+    }
+
+    async handleItemCreated() {
+        this.showToast('Success', 'Item was created successfully.', 'success');
+        this.isCreateItemModalOpen = false;
+        await this.loadItems();
+    }
+
+    async handleCreateItemSubmit(event) {
+        event.preventDefault();
+        const fields = event.detail.fields;
+        try {
+            const imageUrl = await searchImage({query: fields.Name});
+            if (imageUrl) {fields.Image__c = imageUrl;}
+            this.template.querySelector('lightning-record-edit-form[data-id="createItemForm"]').submit(fields);
+        } catch (error) {
+            //this.showToast('Image search failed', 'Item will be created without an image.', 'warning');
+            this.showToast('Image search failed', error.body?.message || error.message || 'Unknown error', 'error');
+
+            this.template.querySelector('lightning-record-edit-form[data-id="createItemForm"]').submit(fields);
         }
     }
 }

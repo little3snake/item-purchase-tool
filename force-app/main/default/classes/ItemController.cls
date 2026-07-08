@@ -1,29 +1,32 @@
 public with sharing class ItemController {
+
 	@AuraEnabled
 	public static List<Item__c> getItems(String type, String family, String searchTerm) {
-		String searchPattern = '%' + String.escapeSingleQuotes(String.isBlank(searchTerm) ? '' : searchTerm.trim()) + '%';
-		String query = 'SELECT Id, Name, Description__c, Type__c, Family__c, Image__c, Price__c, AvailableQuantity__c FROM Item__c WHERE AvailableQuantity__c > 0';
+		String query = 'SELECT Id, Name, Description__c, Type__c, Family__c, Image__c, Price__c, AvailableQuantity__c ' +
+				'FROM Item__c WHERE AvailableQuantity__c > 0';
 
-		if (!String.isBlank(type)) {
-			query += ' AND Type__c = :type';
-		}
-		if (!String.isBlank(family)) {
-			query += ' AND Family__c = :family';
-		}
-		if (!String.isBlank(searchTerm)) {
-			query += ' AND (Name LIKE :searchPattern OR Description__c LIKE :searchPattern)';
-		}
-		// in alphabetical order
+		if (!String.isBlank(type)) { query += ' AND Type__c = :type';}
+		if (!String.isBlank(family)) { query += ' AND Family__c = :family';}
 		query += ' ORDER BY Name ASC';
-		return Database.query(query);
+		List<Item__c> queriedItems = Database.query(query);
+		if (String.isBlank(searchTerm)) { return queriedItems;}
+		String normalizedSearch = searchTerm.toLowerCase();
+		List<Item__c> filteredItems = new List<Item__c>();
+
+		for (Item__c item : queriedItems) {
+			String nameValue = item.Name == null ? '' : item.Name.toLowerCase();
+			String descriptionValue = item.Description__c == null ? '' : item.Description__c.toLowerCase();
+			if (nameValue.contains(normalizedSearch) || descriptionValue.contains(normalizedSearch)) {
+				filteredItems.add(item);
+			}
+		}
+		return filteredItems;
 	}
 
 
 	@AuraEnabled(cacheable=true)
 	public static Account getAccountInfo(Id accountId) {
-		if (accountId == null) {
-			return null;
-		}
+		if (accountId == null) { return null;}
 		return [SELECT Id, Name, AccountNumber, Industry FROM Account WHERE Id = :accountId LIMIT 1];
 	}
 
@@ -86,4 +89,34 @@ public with sharing class ItemController {
 
 		return purchase.Id;
 	}
+
+	@AuraEnabled(cacheable=true)
+	public static Boolean isCurrentUserManager() {
+		User currentUser = [SELECT IsManager__c FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
+		return currentUser.IsManager__c == true;
+	}
+
+
+	@AuraEnabled
+	public static String searchImage(String query) {
+		if (String.isBlank(query)) {return null;}
+		HttpRequest req = new HttpRequest();
+		req.setEndpoint('callout:Unsplash/search/photos?per_page=1&query=' + EncodingUtil.urlEncode(query, 'UTF-8'));
+		req.setMethod('GET');
+
+		Http http = new Http();
+		HttpResponse res = http.send(req);
+		//if (res.getStatusCode() != 200) { return null;}
+		if (res.getStatusCode() != 200) {
+			throw new AuraHandledException('Unsplash error: ' + res.getStatusCode() + ' ' + res.getBody());
+		}
+
+		Map<String,Object> body = (Map<String,Object>)JSON.deserializeUntyped(res.getBody());
+		List<Object> results = (List<Object>)body.get('results');
+		if (results.isEmpty()) { return null;}
+		Map<String,Object> photo = (Map<String,Object>)results[0];
+		Map<String,Object> urls = (Map<String,Object>)photo.get('urls');
+		return (String)urls.get('regular');
+	}
+
 }
