@@ -8,7 +8,6 @@ trigger PurchaseLineTrigger on PurchaseLine__c (after insert, after update, afte
 			}
 		}
 	}
-
 	if (Trigger.isUpdate || Trigger.isDelete) {
 		for (PurchaseLine__c line : Trigger.old) {
 			if (line.PurchaseId__c != null) {
