@@ -108,7 +108,9 @@ public with sharing class ItemController {
 		HttpResponse res = http.send(req);
 		//if (res.getStatusCode() != 200) { return null;}
 		if (res.getStatusCode() != 200) {
-			throw new AuraHandledException('Unsplash error: ' + res.getStatusCode() + ' ' + res.getBody());
+			throw new AuraHandledException(
+							'Unsplash error: ' + res.getStatusCode() + ' ' + res.getBody()
+			);
 		}
 
 		Map<String,Object> body = (Map<String,Object>)JSON.deserializeUntyped(res.getBody());

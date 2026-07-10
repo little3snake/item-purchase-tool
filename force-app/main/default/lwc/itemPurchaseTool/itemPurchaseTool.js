@@ -244,7 +244,9 @@ export default class ItemPurchaseTool extends NavigationMixin(LightningElement) 
             this.template.querySelector('lightning-record-edit-form[data-id="createItemForm"]').submit(fields);
         } catch (error) {
             //this.showToast('Image search failed', 'Item will be created without an image.', 'warning');
-            this.showToast('Image search failed', error.body?.message || error.message || 'Unknown error',
+            this.showToast(
+                'Image search failed',
+                error.body?.message || error.message || 'Unknown error',
                 'error'
             );
 
